@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbe671ad99a924f4291031ccb293f68f, type: 3}
+  m_Name: DataLink
+  m_EditorClassIdentifier: 
+  _spawnGameObject: {fileID: 7355775886437882563, guid: 34741b90a6f20bd43b73f889865c454c,
+    type: 3}
+  _lineConnectorSpawnGameObject: {fileID: -5594572788555505419, guid: 8ef1a298f94d76f4f809856531c9f23e,
+    type: 3}
+  _materialsData: {fileID: 11400000, guid: b613ed66af3d37e47884d6ea50f49ec8, type: 2}
+  _layersData: {fileID: 11400000, guid: 66a69077b1646b541b67bd6dd63c4a04, type: 2}
