@@ -22,7 +22,7 @@ public class Platform : MonoBehaviour, IDraggable
     public void Awake()
     {
         _rigidbody = GetComponentInParent<Rigidbody>();
-        _oldRigidbodyPosition = transform.position;
+        _oldRigidbodyPosition = _rigidbody.position;
         _renderer = GetComponent<Renderer>();
         _materialsData = Data_Link.Instance.MaterialsData;
         LogicHelper.ChangeRendererMaterials(_renderer, _materialsData.DefaultMaterial);        
@@ -65,7 +65,7 @@ public class Platform : MonoBehaviour, IDraggable
     {
         int waitCount = 0;
         while (waitCount < _positionUpdateDelayCount)
-        {
+        {            
             waitCount++;            
             PlatformDraggedEvent?.Invoke();
             yield return null;
