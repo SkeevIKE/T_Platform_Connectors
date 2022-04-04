@@ -5,10 +5,10 @@ public class DragAndDrop_logic
     private Input_Handler _inputHandler;
     private Camera _mainCamera;    
     private bool _isDraged;
-    private Vector2 _controlPosition;    
-    private IDraggable _currentDraggableObject;
+    private Vector2 _controlPosition; 
+    private IDraggable _rememberDraggableObject;
     private IDraggable _holdDraggableObject;
-    private IDraggable _curentHighlightObject;
+    private IDraggable _currentHighlightObject;
     private Plane _plane;    
     private ControlSelectType _holdControlSelectType;
     private ControlSelectType _selectControlSelectType;
@@ -41,7 +41,22 @@ public class DragAndDrop_logic
 
         if (_holdDraggableObject != null)
         {
-            _holdDraggableObject.Dragging(LogicHelper.GetPlanePosition(_plane, _mainCamera, _controlPosition));            
+            if (_holdControlSelectType == ControlSelectType.Connector)
+            {
+                if (_currentHighlightObject is Platform || _currentHighlightObject is Connector)
+                {
+                    _holdDraggableObject.Dragging(LogicHelper.GetPointHitPosition(_mainCamera, _controlPosition));
+                }
+
+                if (_currentHighlightObject == null)
+                {                   
+                    _holdDraggableObject.Dragging(LogicHelper.GetPlanePosition(_plane, _mainCamera, _controlPosition));
+                }
+            }
+            else
+            {
+                _holdDraggableObject.Dragging(LogicHelper.GetPlanePosition(_plane, _mainCamera, _controlPosition));
+            }
         }
     }
 
@@ -66,23 +81,24 @@ public class DragAndDrop_logic
 
         if (newDraggableHighlightObject != null)
         {
-            if (_curentHighlightObject != null && _curentHighlightObject != newDraggableHighlightObject)
+            if (_currentHighlightObject != null && _currentHighlightObject != newDraggableHighlightObject)
             {
-                _curentHighlightObject.HighlightMode(isUnder: false);
+                _currentHighlightObject.HighlightMode(isUnder: false);
             }
 
-            _curentHighlightObject = newDraggableHighlightObject;
+            _currentHighlightObject = newDraggableHighlightObject;
 
-            if (_curentHighlightObject != _holdDraggableObject || _curentHighlightObject is Platform)
+            if (_currentHighlightObject != _holdDraggableObject || _currentHighlightObject is Platform)
             {
-                _curentHighlightObject.HighlightMode(isUnder: true);
+                _currentHighlightObject.HighlightMode(isUnder: true);
             }
         }
         else
         {
-            if (_curentHighlightObject != null)
+            if (_currentHighlightObject != null)
             {
-                _curentHighlightObject.HighlightMode(isUnder: false);
+                _currentHighlightObject.HighlightMode(isUnder: false);
+                _currentHighlightObject = null;
             }
         }    
     }
@@ -90,27 +106,33 @@ public class DragAndDrop_logic
     // Start (hold) selection object logic
     private void HoldObject()
     {
-        IDraggable holdDraggableObject = LogicHelper.CheckDraggableObject(_mainCamera, _controlPosition);
-        if (holdDraggableObject != null)
-        {
-            _holdDraggableObject = holdDraggableObject;
-        }
+        _holdDraggableObject = LogicHelper.CheckDraggableObject(_mainCamera, _controlPosition);
+        _holdControlSelectType = LogicHelper.ChekControlSelectType(_holdDraggableObject);
 
-        _holdControlSelectType = LogicHelper.ChekControlSelectType(holdDraggableObject);
-        if (_holdControlSelectType == ControlSelectType.Platform)
+        if (_holdControlSelectType == ControlSelectType.Platform || _holdControlSelectType == ControlSelectType.Empty)
         {
-            if (_currentDraggableObject != null)
+            if (_rememberDraggableObject != null)
             {
-                _currentDraggableObject.SelectControl();
-                _currentDraggableObject = null;
+                _rememberDraggableObject.SelectControl();
+                _rememberDraggableObject = null;
             }
         }
         else if (_holdControlSelectType == ControlSelectType.Connector)
-        {
-            _holdDraggableObject?.SelectControl();
+        {           
+            if (_rememberDraggableObject != null)
+            {
+                if (_rememberDraggableObject != _holdDraggableObject)
+                {
+                    _rememberDraggableObject.SelectControl();
+                    _holdDraggableObject.SelectControl();
+                }
+            }
+            else
+            {
+                _holdDraggableObject.SelectControl();
+            }
         }
-
-        _holdDraggableObject?.HoldControl(LogicHelper.GetPlanePosition(_plane, _mainCamera, _controlPosition));
+        _holdDraggableObject?.HoldControl(LogicHelper.GetPlanePosition(_plane, _mainCamera, _controlPosition));        
     }
 
     // Object selection/unselection logic
@@ -120,11 +142,11 @@ public class DragAndDrop_logic
         {
             case ControlSelectType.Empty:
                 {
-                    if (_currentDraggableObject != null)
+                    if (_rememberDraggableObject != null)
                     {
-                        _currentDraggableObject.SelectControl();
-                        _currentDraggableObject = null;
-                    }
+                        _rememberDraggableObject.SelectControl();
+                        _rememberDraggableObject = null;
+                    }                    
                 }
                 break;
 
@@ -138,17 +160,16 @@ public class DragAndDrop_logic
 
             case ControlSelectType.Platform:
                 {
-                    _holdDraggableObject.SelectControl();
-
-                    if (_currentDraggableObject != null)
+                    if (_rememberDraggableObject != null)
                     {
-                        _currentDraggableObject.SelectControl();
-                        _currentDraggableObject = null;
+                        _rememberDraggableObject.SelectControl();
+                        _rememberDraggableObject = null;
                     }
+                    _holdDraggableObject.SelectControl();
+                    _holdDraggableObject = null;
                 }
-                break;           
-        }
-        _holdDraggableObject = null;        
+                break;            
+        }       
     }
 
     // Connector selection/unselection logic
@@ -158,83 +179,66 @@ public class DragAndDrop_logic
         {
             case ControlSelectType.Empty:
                 {
-                    ((Connector)_holdDraggableObject).ResetLineConnector();
-                    _holdDraggableObject.SelectControl();
-                    if (_currentDraggableObject != null)
-                    {
-                        _currentDraggableObject.SelectControl();
-                        _currentDraggableObject = null;
+                    if (_rememberDraggableObject != null)
+                    {                        
+                        _rememberDraggableObject = null;
                     }
+                    _holdDraggableObject.SelectControl();                   
                 }
                 break;
 
             case ControlSelectType.Connector:
                 {
-                    if (_currentDraggableObject != null)
+                    if (_rememberDraggableObject != null)
                     {                        
                         // deselect if the same connector
-                        if (selectDraggableObject == _currentDraggableObject)
-                        {                            
-                            _currentDraggableObject = null;
-                        }
-                        else  // configure the connection if the connector is different
+                        if (_rememberDraggableObject == selectDraggableObject)
                         {
-                            Line_Connector checkLineConnector = CheckExistingConnections((Connector)_currentDraggableObject, (Connector)selectDraggableObject);
-                            if (checkLineConnector == null)
-                            {                                
-                                CreatConnection((Connector)_currentDraggableObject, (Connector)selectDraggableObject);
-                            }
-                            else
-                            {
-                                ((Connector)_currentDraggableObject).CurrentConnectionsList.Remove(checkLineConnector);
-                                ((Connector)selectDraggableObject).CurrentConnectionsList.Remove(checkLineConnector);
-                                checkLineConnector.RemoveLineConnector();
-                            }
-                            _currentDraggableObject.SelectControl();
-                            _currentDraggableObject = null;
-                            ((Connector)selectDraggableObject).ResetLineConnector();
+                            selectDraggableObject.SelectControl();
+                            _rememberDraggableObject = null;
+                        }
+                        else  // create the connection if the connector is different
+                        {
+                           if (selectDraggableObject == _holdDraggableObject)
+                           {
+                                SwitchCreateOrDestroyConnection((Connector)_rememberDraggableObject, (Connector)selectDraggableObject);                                
+                           }
+                           else
+                           {
+                                SwitchCreateOrDestroyConnection((Connector)selectDraggableObject, (Connector)_holdDraggableObject);                                
+                           }
+
+                            _holdDraggableObject.SelectControl();                            
+                            _rememberDraggableObject = null;
                         }
                     }
                     else
                     {
+                        // create connection or while dragging or select an connector
                         if (selectDraggableObject != _holdDraggableObject)
                         {
-                            Line_Connector checkLineConnector = CheckExistingConnections((Connector)_holdDraggableObject, (Connector)selectDraggableObject);
-                            if (checkLineConnector == null)
-                            {
-                                CreatConnection((Connector)_holdDraggableObject, (Connector)selectDraggableObject);                                
-                                _holdDraggableObject.SelectControl();
-                            }
-                            else
-                            {
-                                ((Connector)_holdDraggableObject).CurrentConnectionsList.Remove(checkLineConnector);
-                                ((Connector)selectDraggableObject).CurrentConnectionsList.Remove(checkLineConnector);
-                                checkLineConnector.RemoveLineConnector();
-                                _holdDraggableObject.SelectControl();
-                            }
+                            SwitchCreateOrDestroyConnection((Connector)selectDraggableObject, (Connector)_holdDraggableObject);
+                            _holdDraggableObject.SelectControl();
                         }
-
-                        if (selectDraggableObject == _holdDraggableObject)
+                        else 
                         {
-                            _currentDraggableObject = selectDraggableObject;  
+                            _rememberDraggableObject = selectDraggableObject;                           
                         }                        
-                    }
-                    ((Connector)_holdDraggableObject).ResetLineConnector();
+                    }                               
                 }
                 break;
 
             case ControlSelectType.Platform:
                 {
-                    ((Connector)_holdDraggableObject).ResetLineConnector();
-                    _holdDraggableObject.SelectControl();
-                    if (_currentDraggableObject != null)
-                    {
-                        _currentDraggableObject.SelectControl();                       
-                        _currentDraggableObject = null;
+                    if (_rememberDraggableObject != null)
+                    {                        
+                        _rememberDraggableObject = null;
                     }
+                    _holdDraggableObject.SelectControl();                   
                 }
                 break;
         }
+        ((Connector)_holdDraggableObject).ResetDraggLineConnector();
     }
 
     // Finding existing connections
@@ -247,13 +251,29 @@ public class DragAndDrop_logic
                 Connection.ConnectorsTransform[1] == secondDraggableObject.transform ||
                 Connection.ConnectorsTransform[1] == firstDraggableObject.transform &&
                 Connection.ConnectorsTransform[0] == secondDraggableObject.transform)
-                {
+            {
                 findLineConnector = Connection;
                 break;
             }
         }
 
         return findLineConnector;
+    }
+
+    // Switch create or destroy connection
+    private void SwitchCreateOrDestroyConnection(Connector firstConnectorObject, Connector secondConnectorObject)
+    {
+        Line_Connector checkLineConnector = CheckExistingConnections(firstConnectorObject, secondConnectorObject);
+        if (checkLineConnector == null)
+        {
+            CreatConnection(firstConnectorObject, secondConnectorObject);
+        }
+        else
+        {
+            firstConnectorObject.CurrentConnectionsList.Remove(checkLineConnector);
+            secondConnectorObject.CurrentConnectionsList.Remove(checkLineConnector);
+            checkLineConnector.RemoveLineConnector();
+        }
     }
 
     // Creating a connection between connectors

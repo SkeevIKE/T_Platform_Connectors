@@ -18,7 +18,7 @@ public class ReadyForConnectState_Connector : State
 
     public override void SelectConector()
     {
-       // _connector.ConnectorStateMachine.ChangeState(_connector.NormalStateConnector);
+       _connector.ConnectorStateMachine.ChangeState(_connector.NormalStateConnector);
     }
 
     public override void HighlightMode(bool isUnder)

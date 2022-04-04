@@ -12,9 +12,8 @@ public class Connector : MonoBehaviour, IDraggable
     public Materials_Data MaterialsData { get; private set; }    
 
     public State_Machine ConnectorStateMachine { get; set; }
-    public NormalState_Connector NormalStateConnector { get; set; }
+    public NormalState_Connector NormalStateConnector { get; set; }    
     public ReadyForConnectState_Connector ReadyForConnectStateConnector { get; set; }
-    public ConnectedState_Connector ConnectedStateConnector { get; set; }
     public SelectedState_Connector SelectedStateConnector { get; set; }
        
     public void Awake()
@@ -23,8 +22,7 @@ public class Connector : MonoBehaviour, IDraggable
         MaterialsData = Data_Link.Instance.MaterialsData;
         LogicHelper.ChangeRendererMaterials(Renderer, MaterialsData.DefaultMaterial);
 
-        NormalStateConnector = new NormalState_Connector(connector: this);
-        ConnectedStateConnector = new ConnectedState_Connector(connector: this);
+        NormalStateConnector = new NormalState_Connector(connector: this);        
         ReadyForConnectStateConnector = new ReadyForConnectState_Connector(connector: this);
         SelectedStateConnector = new SelectedState_Connector(connector: this);
 
@@ -44,13 +42,13 @@ public class Connector : MonoBehaviour, IDraggable
     public void Dragging(Vector3 position)
     {
         if (_dragginglineConnector != null)
-        {
-            position = new Vector3(position.x, position.y + 1f, position.z);
+        {            
             _dragginglineConnector.UpdateConnectorsLinePosition(transform.position, position);
         }
     }
 
-    public void ResetLineConnector()
+    // Removing the line connector when dragging is used
+    public void ResetDraggLineConnector()
     {
         if (_dragginglineConnector != null)
         {

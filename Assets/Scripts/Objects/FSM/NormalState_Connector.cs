@@ -18,10 +18,6 @@ public class NormalState_Connector : State
 
     public override void SelectConector()
     {
-        if (Data_Link.Instance.CurentConnector != null && Data_Link.Instance.CurentConnector != _connector)
-        {
-            _connector.ConnectorStateMachine.ChangeState(_connector.ConnectedStateConnector);
-        }
         _connector.ConnectorStateMachine.ChangeState(_connector.SelectedStateConnector);
     }
 

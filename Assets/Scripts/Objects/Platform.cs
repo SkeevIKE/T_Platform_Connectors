@@ -9,12 +9,17 @@ public class Platform : MonoBehaviour, IDraggable
     private Materials_Data _materialsData;
     private Vector3 _dragStartPosition;
     private Vector3 _startPosition;
+    private Vector3 _oldRigidbodyPosition;
+
     private bool _isDragging;
+    private Rigidbody _rigidbody;
 
     public event Action PlatformDraggedEvent;
 
     public void Awake()
     {
+        _rigidbody = GetComponentInParent<Rigidbody>();
+        _oldRigidbodyPosition = _rigidbody.position;
         _renderer = GetComponent<Renderer>();
         _materialsData = Data_Link.Instance.MaterialsData;
         LogicHelper.ChangeRendererMaterials(_renderer, _materialsData.DefaultMaterial);        
@@ -23,7 +28,7 @@ public class Platform : MonoBehaviour, IDraggable
     public void HoldControl(Vector3 position)
     {
         _dragStartPosition =  position;
-        _startPosition = transform.parent.position;
+        _startPosition = _rigidbody.position;      
         _isDragging = true;
     }
 
@@ -35,8 +40,17 @@ public class Platform : MonoBehaviour, IDraggable
 
     public void Dragging(Vector3 position)
     {
-        transform.parent.position = _startPosition + (position - _dragStartPosition);
+        _rigidbody.position = _startPosition + (position - _dragStartPosition);       
         PlatformDraggedEvent?.Invoke();
+    }
+
+    private void Update()
+    {
+        if (_oldRigidbodyPosition != _rigidbody.position)
+        {
+            _oldRigidbodyPosition = _rigidbody.position;
+            PlatformDraggedEvent?.Invoke();
+        }
     }
 
     public void HighlightMode(bool isUnder)

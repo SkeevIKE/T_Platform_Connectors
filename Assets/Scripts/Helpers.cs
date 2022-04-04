@@ -46,6 +46,18 @@ public class LogicHelper
         return planePosition;
     }
 
+    // Find a position on a colider
+    public static Vector3 GetPointHitPosition(Camera camera, Vector2 position)
+    { 
+        Vector3 planePosition = new Vector3();
+        Ray ray = camera.ScreenPointToRay(position);
+        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, Data_Link.Instance.LayersData.DraggableObjectsMask))
+        {
+            planePosition = hit.point;
+        }
+        return planePosition;
+    }
+
     // Checking and returning a draggable object
     public static IDraggable CheckDraggableObject(Camera camera, Vector2 position)
     {

@@ -8,14 +8,12 @@ public class SelectedState_Connector : State
 
     public override void Enter()
     {
-        LogicHelper.ChangeRendererMaterials(_connector.Renderer, _connector.MaterialsData.SelectedMaterial);
-        Data_Link.Instance.CurentConnector = _connector;
+        LogicHelper.ChangeRendererMaterials(_connector.Renderer, _connector.MaterialsData.SelectedMaterial);       
         ChangeOtherConnectorsToReadyConnect(isReady: true);
     }
 
     public override void Exit()
-    {
-        Data_Link.Instance.CurentConnector = null;
+    {        
         ChangeOtherConnectorsToReadyConnect(isReady: false);
     }
 
@@ -38,9 +36,8 @@ public class SelectedState_Connector : State
 
     // Changing the color of connectors for a connection
     private void ChangeOtherConnectorsToReadyConnect(bool isReady)
-    {
-        var otherConnectors = Data_Link.Instance.ConnectorPlatformsInScene;
-        foreach (var connector in otherConnectors)
+    {       
+        foreach (var connector in Data_Link.Instance.ConnectorPlatformsInScene)
         {
             if (connector != _connector)
             {

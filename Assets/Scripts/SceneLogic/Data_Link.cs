@@ -20,8 +20,7 @@ public class Data_Link : SingletonScriptableObject<Data_Link>
     [SerializeField]
     private Layers_Data _layersData;
     public Layers_Data LayersData => _layersData;
-
-    public Connector CurentConnector { get; set; }
+    
     public Connector[] ConnectorPlatformsInScene { get; set; }
 
     public Scene_Builder SceneBuilder { get; set; }
