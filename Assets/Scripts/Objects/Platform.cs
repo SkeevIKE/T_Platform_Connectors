@@ -5,6 +5,7 @@ using System;
 
 public class Platform : MonoBehaviour, IDraggable
 {
+    private const int _positionUpdateDelayCount = 20;
     private Renderer _renderer;
     private Materials_Data _materialsData;
     private Vector3 _dragStartPosition;
@@ -12,6 +13,8 @@ public class Platform : MonoBehaviour, IDraggable
     private Vector3 _oldRigidbodyPosition;
 
     private bool _isDragging;
+    private bool _isPositionChange;
+    
     private Rigidbody _rigidbody;
 
     public event Action PlatformDraggedEvent;
@@ -19,7 +22,7 @@ public class Platform : MonoBehaviour, IDraggable
     public void Awake()
     {
         _rigidbody = GetComponentInParent<Rigidbody>();
-        _oldRigidbodyPosition = _rigidbody.position;
+        _oldRigidbodyPosition = transform.position;
         _renderer = GetComponent<Renderer>();
         _materialsData = Data_Link.Instance.MaterialsData;
         LogicHelper.ChangeRendererMaterials(_renderer, _materialsData.DefaultMaterial);        
@@ -46,11 +49,30 @@ public class Platform : MonoBehaviour, IDraggable
 
     private void Update()
     {
-        if (_oldRigidbodyPosition != _rigidbody.position)
+        // Checking and triggering a delay to update line connector
+        if (PlatformDraggedEvent != null && !_isPositionChange)
+        {           
+            if (_oldRigidbodyPosition != _rigidbody.position)
+            {
+                _isPositionChange = true;                
+                StartCoroutine(UpdatePosition());               
+            }            
+        }    
+    }
+
+    // Line connector update cycle
+    IEnumerator UpdatePosition()
+    {
+        int waitCount = 0;
+        while (waitCount < _positionUpdateDelayCount)
         {
-            _oldRigidbodyPosition = _rigidbody.position;
+            waitCount++;            
             PlatformDraggedEvent?.Invoke();
+            yield return null;
         }
+        
+        _oldRigidbodyPosition = _rigidbody.position;
+        _isPositionChange = false;
     }
 
     public void HighlightMode(bool isUnder)
